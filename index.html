@@ -477,6 +477,7 @@
                 <button class="lang-select-btn" data-lang="mixed">Campuran</button>
             </div>
             <p style="font-size:.85em;margin-top:15px;opacity:.9">(Tekan salah satu tombol untuk mengizinkan suara)</p>
+            <button id="close-menu-btn" class="control-button" style="display: none; margin-top: 20px; background-color: #66bb6a; color: white;">Lanjutkan Main</button>
         </div>
     </div>
 
@@ -536,6 +537,7 @@
             <button id="play-pause-btn" class="control-button play-pause-btn paused">▶️</button>
             <button id="repeat-btn" class="control-button">🔁</button>
             <button id="new-target-btn" class="control-button">🔀</button>
+            <button id="menu-btn" class="control-button">☰</button>
             <button id="settings-btn" class="control-button">⚙️</button>
         </div>
     </div>
@@ -562,6 +564,8 @@
         const settingsPanel = document.getElementById('settings-panel');
         const settingsBtn = document.getElementById('settings-btn');
         const closeSettingsBtn = document.getElementById('close-settings-btn');
+        const menuBtn = document.getElementById('menu-btn');
+        const closeMenuBtn = document.getElementById('close-menu-btn');
         const body = document.body;
 
         // Letter Sets
@@ -1017,6 +1021,7 @@
             }
         }
 
+        let wasPlayingBeforeMenu = false; // To track state before opening menu
         function addEventListeners(){
             const langSelectBtns = document.querySelectorAll('.lang-select-btn');
             langSelectBtns.forEach(btn => {
@@ -1048,6 +1053,7 @@
 
                     ensureAudioReadyOnGesture();
                     startScreen.style.display = 'none';
+                    closeMenuBtn.style.display = 'none'; // Ensure close button is hidden
                     
                     // Reset and start game
                     gameState.score = 0;
@@ -1058,6 +1064,27 @@
                     updateUI();
                     if (!gameState.isPlaying) togglePlayPause();
                 });
+            });
+
+            menuBtn.addEventListener('click', () => {
+                wasPlayingBeforeMenu = gameState.isPlaying;
+                if (wasPlayingBeforeMenu) {
+                    togglePlayPause(); // Pause the game
+                }
+                const startScreenTitle = document.getElementById('start-screen-title');
+                const startScreenText = document.getElementById('start-screen-text');
+                startScreenTitle.textContent = 'Menu Utama';
+                startScreenText.innerHTML = 'Pilih mode permainan untuk memulai dari awal, atau lanjutkan permainan Anda.';
+                startScreen.style.display = 'flex';
+                closeMenuBtn.style.display = 'block'; // Show the close button
+            });
+
+            closeMenuBtn.addEventListener('click', () => {
+                startScreen.style.display = 'none';
+                closeMenuBtn.style.display = 'none';
+                if (wasPlayingBeforeMenu) {
+                    togglePlayPause(); // Resume the game if it was playing before
+                }
             });
 
             playPauseBtn.addEventListener('click', () => { togglePlayPause(); });
