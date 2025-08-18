@@ -416,6 +416,43 @@
                 font-size: 1em;
             }
         }
+
+        @media (max-width: 400px) {
+            header {
+                justify-content: space-between; /* Distribute items evenly */
+            }
+            .focused-stat-group {
+                padding: 10px; /* Reduce padding */
+                gap: 10px;
+            }
+            .stat-section {
+                flex-grow: 1; /* Allow sections to grow and fill space */
+                flex-basis: 0; /* Reset basis */
+            }
+        }
+
+        @media (max-width: 340px) {
+            .section-value {
+                font-size: 1em; /* Further reduce font size */
+            }
+            .focused-stat-group {
+                padding: 8px; /* Further reduce padding */
+                gap: 8px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .focused-stat-group {
+                flex-direction: column; /* Stack level and progress vertically */
+                gap: 5px;
+            }
+            #main-target-display {
+                top: 180px; /* Adjust position due to taller header */
+            }
+            #game-container {
+                padding-top: 160px; /* Adjust padding due to taller header */
+            }
+        }
     </style>
     <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-DJ0XZDFQ4B"></script>
