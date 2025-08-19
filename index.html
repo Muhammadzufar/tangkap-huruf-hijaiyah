@@ -750,13 +750,18 @@
                 } else if (gameState.alphabetType === 'indonesia') {
                     lang = 'id-ID';
                 } else { // This is the 'mixed' mode
-                    // Alternate between Indonesian and English accent
-                    if (gameState.lastLatinLang === 'en-US') {
-                        lang = 'id-ID';
-                        gameState.lastLatinLang = 'id-ID';
+                    if (hasIndonesianVoice) {
+                        // Alternate between Indonesian and English accent
+                        if (gameState.lastLatinLang === 'en-US') {
+                            lang = 'id-ID';
+                            gameState.lastLatinLang = 'id-ID';
+                        } else {
+                            lang = 'en-US';
+                            gameState.lastLatinLang = 'en-US';
+                        }
                     } else {
+                        // Fallback to English if Indonesian voice is not available
                         lang = 'en-US';
-                        gameState.lastLatinLang = 'en-US';
                     }
                 }
                 speakFallback(currentLetter, lang);
@@ -1212,6 +1217,55 @@
         // Don't set initial target, wait for user selection
         // setNewTarget(false); 
         updateUI();
+
+        function checkVoiceSupport() {
+            const indonesianButton = document.querySelector('.lang-select-btn[data-lang="indonesia"]');
+            if (!indonesianButton) return;
+
+            const voices = window.speechSynthesis.getVoices();
+            if (voices.length === 0) {
+                // Voices not loaded yet, wait for the event.
+                return;
+            }
+
+            hasIndonesianVoice = voices.some(voice => voice.lang.startsWith('id'));
+
+            if (hasIndonesianVoice) {
+                indonesianButton.disabled = false;
+                indonesianButton.title = '';
+                indonesianButton.style.opacity = '1';
+                indonesianButton.style.cursor = 'pointer';
+                indonesianButton.textContent = 'Alfabet (ID)';
+            } else {
+                indonesianButton.disabled = true;
+                indonesianButton.title = 'Mode ini tidak didukung di browser Anda.';
+                indonesianButton.style.opacity = '0.6';
+                indonesianButton.style.cursor = 'not-allowed';
+                if (!indonesianButton.textContent.includes('(Tidak Didukung)')) {
+                    indonesianButton.textContent += ' (Tidak Didukung)';
+                }
+            }
+        }
+
+        // Check for voice support
+        if ('speechSynthesis' in window) {
+            // The voices list can be loaded asynchronously.
+            window.speechSynthesis.onvoiceschanged = checkVoiceSupport;
+            // Call it directly, as some browsers load voices without firing the event.
+            checkVoiceSupport();
+        } else {
+            // If speech synthesis is not supported at all, disable the button.
+            const indonesianButton = document.querySelector('.lang-select-btn[data-lang="indonesia"]');
+            if(indonesianButton) {
+                indonesianButton.disabled = true;
+                indonesianButton.title = 'Fitur suara tidak didukung di browser Anda.';
+                indonesianButton.style.opacity = '0.6';
+                indonesianButton.style.cursor = 'not-allowed';
+                if (!indonesianButton.textContent.includes('(Tidak Didukung)')) {
+                    indonesianButton.textContent += ' (Tidak Didukung)';
+                }
+            }
+        }
 
         console.info('Game audio is now fully offline using Web Audio API and Speech Synthesis.');
     });
