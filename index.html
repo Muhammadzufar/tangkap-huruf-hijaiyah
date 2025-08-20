@@ -99,6 +99,14 @@
             margin-top: 20px;
         }
 
+        .voice-warning-text {
+            color: #ffeb3b; /* A yellow that stands out on the dark overlay */
+            font-weight: bold;
+            padding: 0 20px; /* Add some padding */
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+
         .lang-select-btn {
             font-size: 1.2em;
             padding: 15px 25px;
@@ -313,10 +321,6 @@
         .control-button.play-pause-btn.paused:hover {
             background-color: #546e7a;
         }
-        
-        #font-toggle-btn {
-            /* Keep the same style as other buttons now */
-        }
 
         #font-toggle-btn.active {
             background-color: var(--button-bg); /* Yellow to indicate active */
@@ -469,14 +473,15 @@
     <div id="start-screen-overlay" role="dialog" aria-label="Layar Mulai">
         <div>
             <h1 id="start-screen-title">Tangkap Huruf</h1>
-            <p id="start-screen-text">Siap berpetualang dengan huruf? Pilih modemu di bawah!</p>
+            <p id="start-screen-text">Naikan Volume dan mari berpetualang dengan huruf dibawah!</p>
             <div id="lang-selection-container">
                 <button class="lang-select-btn" data-lang="hijaiyah">Hijaiyah</button>
                 <button class="lang-select-btn" data-lang="indonesia">Alfabet (ID)</button>
                 <button class="lang-select-btn" data-lang="inggris">Alphabet (EN)</button>
                 <button class="lang-select-btn" data-lang="mixed">Campuran</button>
             </div>
-            <p style="font-size:.85em;margin-top:15px;opacity:.9">(Tekan salah satu tombol untuk mengizinkan suara)</p>
+            <p id="voice-warning" class="voice-warning-text" style="display: none;"></p>
+            <p style="font-size:.85em;margin-top:15px;opacity:.9">(Tekan salah satu tombol untuk mode bermain)</p>
             <button id="close-menu-btn" class="control-button" style="display: none; margin-top: 20px; background-color: #66bb6a; color: white;">Lanjutkan Main</button>
         </div>
     </div>
@@ -537,8 +542,8 @@
             <button id="play-pause-btn" class="control-button play-pause-btn paused">▶️</button>
             <button id="repeat-btn" class="control-button">🔁</button>
             <button id="new-target-btn" class="control-button">🔀</button>
-            <button id="menu-btn" class="control-button">☰</button>
             <button id="settings-btn" class="control-button">⚙️</button>
+            <button id="menu-btn" class="control-button">☰</button>
         </div>
     </div>
 
@@ -567,6 +572,8 @@
         const menuBtn = document.getElementById('menu-btn');
         const closeMenuBtn = document.getElementById('close-menu-btn');
         const body = document.body;
+
+        let hasIndonesianVoice = false;
 
         // Letter Sets
         const hijaiyahLetters = ['ا','ب','ت','ث','ج','ح','خ','د','ذ','ر','ز','س','ش','ص','ض','ط','ظ','ع','غ','ف','ق','ك','ل','م','ن','و','ه','ء','ي'];
@@ -1218,9 +1225,11 @@
         // setNewTarget(false); 
         updateUI();
 
+        let alertShown = false;
         function checkVoiceSupport() {
             const indonesianButton = document.querySelector('.lang-select-btn[data-lang="indonesia"]');
-            if (!indonesianButton) return;
+            const voiceWarning = document.getElementById('voice-warning');
+            if (!indonesianButton || !voiceWarning) return;
 
             const voices = window.speechSynthesis.getVoices();
             if (voices.length === 0) {
@@ -1236,6 +1245,7 @@
                 indonesianButton.style.opacity = '1';
                 indonesianButton.style.cursor = 'pointer';
                 indonesianButton.textContent = 'Alfabet (ID)';
+                voiceWarning.style.display = 'none';
             } else {
                 indonesianButton.disabled = true;
                 indonesianButton.title = 'Mode ini tidak didukung di browser Anda.';
@@ -1244,10 +1254,17 @@
                 if (!indonesianButton.textContent.includes('(Tidak Didukung)')) {
                     indonesianButton.textContent += ' (Tidak Didukung)';
                 }
+
+                voiceWarning.textContent = '*Untuk mode Alfabet (ID) tidak tersedia di browser Anda, kami sarankan gunakan Google Chrome.';
+                voiceWarning.style.display = 'block';
+
+                if (!alertShown) {
+                    alert('Dukungan suara Bahasa Indonesia tidak ditemukan di browser ini. Untuk pengalaman terbaik, silakan gunakan Google Chrome.');
+                    alertShown = true;
+                }
             }
         }
 
-        // Check for voice support
         if ('speechSynthesis' in window) {
             // The voices list can be loaded asynchronously.
             window.speechSynthesis.onvoiceschanged = checkVoiceSupport;
@@ -1256,7 +1273,8 @@
         } else {
             // If speech synthesis is not supported at all, disable the button.
             const indonesianButton = document.querySelector('.lang-select-btn[data-lang="indonesia"]');
-            if(indonesianButton) {
+            const voiceWarning = document.getElementById('voice-warning');
+            if (indonesianButton) {
                 indonesianButton.disabled = true;
                 indonesianButton.title = 'Fitur suara tidak didukung di browser Anda.';
                 indonesianButton.style.opacity = '0.6';
@@ -1264,6 +1282,10 @@
                 if (!indonesianButton.textContent.includes('(Tidak Didukung)')) {
                     indonesianButton.textContent += ' (Tidak Didukung)';
                 }
+            }
+            if (voiceWarning) {
+                voiceWarning.textContent = '*Fitur suara tidak didukung di browser ini.';
+                voiceWarning.style.display = 'block';
             }
         }
 
