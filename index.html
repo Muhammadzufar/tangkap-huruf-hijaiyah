@@ -272,6 +272,31 @@
             height: 100px; /* Reverted size */
         }
 
+        /* --- Bubble Shapes --- */
+        .bubble-circle {
+            border-radius: 50%;
+        }
+
+        .bubble-square {
+            border-radius: 15%; /* Rounded corners */
+        }
+
+        .bubble-star {
+            background: transparent; /* Remove background for clip-path to work well */
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            box-shadow: none; /* Stars might look better without a shadow */
+            /* We will apply color to a pseudo-element */
+        }
+
+        .bubble-star::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bubble-bg);
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            z-index: -1;
+        }
+
         /* --- UI Panel --- */
         #ui-panel {
             background-color: var(--control-panel-bg);
@@ -548,6 +573,7 @@
     </div>
 
     <script src="audio_data.js"></script>
+    <script src="level-mechanics.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         // Elements
@@ -622,11 +648,7 @@
             currentLetterIndex = 0;
         }
 
-        const MAX_LEVEL = 20;
-        const LEVEL_THRESHOLDS = {};
-        for (let i = 2; i <= MAX_LEVEL; i++) {
-            LEVEL_THRESHOLDS[i] = (i - 1) * 100;
-        }
+        
 
         const placeholderBase64 ='SUQzBAAAAAAB9JVRWFgAAAASAAADTGF2ZjU2LjM2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV6urq6urq6urq6urq6urq6urq6urq6urq6v////////////////////////////////8AAAAATGF2YzU2LjQxAAAAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAA//MUZAgAAAGkAAAAAAAAA0gAAAAA';
 
@@ -830,8 +852,13 @@
         }
 
         function loop(now) {
-            const spawnInterval = 2000 / Math.max(0.01, gameState.gameSpeed);
-            if (now - lastSpawnTime >= spawnInterval && gameState.isPlaying) { createBubble(); lastSpawnTime = now; }
+            const mechanics = getMechanicsForLevel(gameState.currentLevel);
+            const spawnInterval = mechanics.spawnInterval / Math.max(0.01, gameState.gameSpeed);
+
+            if (now - lastSpawnTime >= spawnInterval && gameState.isPlaying) {
+                createBubble();
+                lastSpawnTime = now;
+            }
 
             const bubbles = Array.from(document.querySelectorAll('.bubble'));
             const containerHeight = gameContainer.clientHeight;
@@ -840,18 +867,31 @@
             bubbles.forEach(bubble => {
                 let top = parseFloat(bubble.style.top || '-120');
                 let left = parseFloat(bubble.style.left);
+
                 if (gameState.isPlaying) {
                     top += gameState.gameSpeed;
-                    if (gameState.currentLevel >= 4) left += gameState.windDirection * gameState.windStrength;
-                    if (bubble.dataset.vx) left += parseFloat(bubble.dataset.vx) * (gameState.gameSpeed / 2);
+
+                    // Handle special effects based on level mechanics
+                    if (mechanics.specialEffect === 'wind') {
+                        left += gameState.windDirection * gameState.windStrength;
+                    } else if (mechanics.specialEffect === 'zigzag' || (mechanics.specialEffect === 'random-move' && bubble.dataset.vx)) {
+                        let vx = parseFloat(bubble.dataset.vx);
+                        left += vx * (gameState.gameSpeed / 2);
+                        // Wall bouncing for zigzag
+                        const bubbleWidth = bubble.offsetWidth;
+                        if (left < 0 || left > containerWidth - bubbleWidth) {
+                            bubble.dataset.vx = -vx;
+                            left = Math.max(0, Math.min(left, containerWidth - bubbleWidth));
+                        }
+                    }
                 }
-                const bubbleWidth = bubble.offsetWidth;
-                if (left < 0 || left > containerWidth - bubbleWidth) {
-                    if (bubble.dataset.vx) bubble.dataset.vx = -parseFloat(bubble.dataset.vx);
-                    left = Math.max(0, Math.min(left, containerWidth - bubbleWidth));
+
+                if (top > containerHeight + 50) {
+                    bubble.remove();
+                } else {
+                    bubble.style.top = top + 'px';
+                    bubble.style.left = left + 'px';
                 }
-                if (top > containerHeight + 50) bubble.remove();
-                else { bubble.style.top = top + 'px'; bubble.style.left = left + 'px'; }
             });
 
             if (gameState.isPlaying || document.querySelectorAll('.bubble').length > 0) {
@@ -864,13 +904,31 @@
         function createBubble() {
             const MAX_BUBBLES = 40;
             if (document.querySelectorAll('.bubble').length >= MAX_BUBBLES) return;
-            const bubble = document.createElement('div');
-            bubble.className = 'bubble';
 
+            const mechanics = getMechanicsForLevel(gameState.currentLevel);
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble'; // Base class
+
+            // Set bubble shape
+            let bubbleClasses = ['bubble'];
+            if (mechanics.bubbleClass === 'bubble-random') {
+                const shapes = ['bubble-circle', 'bubble-square', 'bubble-star'];
+                bubbleClasses.push(shapes[Math.floor(Math.random() * shapes.length)]);
+            } else {
+                bubbleClasses.push(mechanics.bubbleClass || 'bubble-circle');
+            }
+            bubble.className = bubbleClasses.join(' ');
+
+            // Set bubble color
             const hue = Math.floor(Math.random() * 360);
             const saturation = 70 + Math.random() * 25;
             const lightness = 85 + Math.random() * 10;
-            bubble.style.background = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+            // For stars, we color the pseudo-element, for others, the element itself.
+            if (bubble.classList.contains('bubble-star')) {
+                bubble.style.setProperty('--bubble-bg', `hsl(${hue}, ${saturation}%, ${lightness}%)`);
+            } else {
+                bubble.style.background = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+            }
 
             let letter;
             if (Math.random() < 0.35 && gameState.currentTarget) {
@@ -878,32 +936,27 @@
             } else {
                 let letterPool;
                 switch (gameState.alphabetType) {
-                    case 'hijaiyah':
-                        letterPool = hijaiyahLetters;
-                        break;
-                    case 'indonesia':
-                        letterPool = indonesianLetters;
-                        break;
-                    case 'inggris':
-                        letterPool = englishLetters;
-                        break;
-                    case 'mixed':
-                        letterPool = [...hijaiyahLetters, ...indonesianLetters];
-                        break;
-                    default:
-                        letterPool = hijaiyahLetters;
+                    case 'hijaiyah': letterPool = hijaiyahLetters; break;
+                    case 'indonesia': letterPool = indonesianLetters; break;
+                    case 'inggris': letterPool = englishLetters; break;
+                    case 'mixed': letterPool = [...hijaiyahLetters, ...indonesianLetters]; break;
+                    default: letterPool = hijaiyahLetters;
                 }
                 letter = letterPool[Math.floor(Math.random() * letterPool.length)];
             }
             bubble.textContent = letter;
             bubble.dataset.type = 'letter';
+
             const bw = (gameState.isLargeFont) ? 100 : 80;
             const left = Math.max(5, Math.random() * (gameContainer.clientWidth - bw - 10));
             bubble.style.left = left + 'px';
             bubble.style.top = '-120px';
-            if (gameState.currentLevel >= 11) {
-                bubble.dataset.vx = (Math.random() - 0.5) * 2;
+
+            // Set initial velocity for certain effects
+            if (mechanics.specialEffect === 'zigzag' || mechanics.specialEffect === 'random-move') {
+                bubble.dataset.vx = (Math.random() - 0.5) * 2; // Horizontal velocity
             }
+
             bubble.addEventListener('pointerdown', handleBubbleClick);
             gameContainer.appendChild(bubble);
         }
@@ -958,50 +1011,61 @@
             fontToggleBtn.classList.toggle('active', gameState.isLargeFont);
             fontToggleBtn.textContent = gameState.isLargeFont ? 'Ukuran: Besar' : 'Ukuran: Kecil';
 
-            // Update level progress bar
+            // Update level progress bar using new mechanics
             let progress = 0;
-            if (gameState.currentLevel < MAX_LEVEL) {
-                const currentLevelThreshold = LEVEL_THRESHOLDS[gameState.currentLevel] || 0;
-                const nextLevelThreshold = LEVEL_THRESHOLDS[gameState.currentLevel + 1];
-                if (nextLevelThreshold) {
-                    const scoreNeededForNextLevel = nextLevelThreshold - currentLevelThreshold;
-                    const scoreAchievedInCurrentLevel = gameState.score - currentLevelThreshold;
-                    progress = (scoreAchievedInCurrentLevel / scoreNeededForNextLevel) * 100;
-                    progress = Math.max(0, Math.min(100, progress));
-                }
-            } else {
+            if (gameState.currentLevel >= MAX_LEVEL) {
                 progress = 100;
+            } else {
+                const currentMechanics = getMechanicsForLevel(gameState.currentLevel);
+                const prevLevelScore = (gameState.currentLevel > 1) ? getMechanicsForLevel(gameState.currentLevel - 1).nextLevelScore : 0;
+                const scoreNeededForNextLevel = currentMechanics.nextLevelScore - prevLevelScore;
+                const scoreAchievedInCurrentLevel = gameState.score - prevLevelScore;
+                
+                if (scoreNeededForNextLevel > 0) {
+                    progress = (scoreAchievedInCurrentLevel / scoreNeededForNextLevel) * 100;
+                }
             }
-            levelProgressBar.style.width = `${progress}%`;
+            levelProgressBar.style.width = `${Math.max(0, Math.min(100, progress))}%`;
         }
 
         function checkLevelUp() {
-            if (gameState.currentLevel < MAX_LEVEL) {
-                const nextLevel = gameState.currentLevel + 1;
-                if (LEVEL_THRESHOLDS[nextLevel] && gameState.score >= LEVEL_THRESHOLDS[nextLevel]) {
-                    gameState.currentLevel = nextLevel;
-                    if (gameState.currentLevel <= 10) gameState.gameSpeed += 0.2;
-                    else if (gameState.currentLevel === 11) gameState.gameSpeed = 1.5;
-                    else gameState.gameSpeed += 0.2;
-                    
-                    playLevelUpSound(); // Play sound on level up
+            if (gameState.currentLevel >= MAX_LEVEL) return; // Already at max level
 
-                    if (gameState.currentLevel === MAX_LEVEL) congratulationsScreen();
-                    else levelUpEffect();
-                    updateUI();
+            const currentMechanics = getMechanicsForLevel(gameState.currentLevel);
+            
+            if (gameState.score >= currentMechanics.nextLevelScore) {
+                gameState.currentLevel++;
+                const newMechanics = getMechanicsForLevel(gameState.currentLevel);
+                gameState.gameSpeed = newMechanics.gameSpeed;
+
+                playLevelUpSound();
+
+                if (gameState.currentLevel === MAX_LEVEL) {
+                    congratulationsScreen();
+                } else {
+                    levelUpEffect();
                 }
+                updateUI();
             }
         }
 
         function levelUpEffect() {
+            const mechanics = getMechanicsForLevel(gameState.currentLevel);
             const levelUpDiv = document.createElement('div');
-            levelUpDiv.textContent = `Level ${gameState.currentLevel}!`;
-            levelUpDiv.style.cssText = `position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 4em; font-weight: bold; color: #4CAF50; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); z-index: 5000; opacity: 0; animation: fadeAndScale 1.5s forwards;`;
+            levelUpDiv.innerHTML = `Level ${gameState.currentLevel}!<br><span style="font-size: 0.5em; color: #388e3c;">${mechanics.description || ''}</span>`;
+            levelUpDiv.style.cssText = `position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 4em; font-weight: bold; color: #4CAF50; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); z-index: 5000; opacity: 0; animation: fadeAndScale 2s forwards; text-align: center;`;
             document.body.appendChild(levelUpDiv);
-            const styleSheet = document.styleSheets[0];
+            
             const keyframes = `@keyframes fadeAndScale { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); } }`;
-            try { styleSheet.insertRule(keyframes, styleSheet.cssRules.length); } catch(e) { console.debug("Failed to insert keyframe", e)}
-            setTimeout(() => { levelUpDiv.remove(); }, 1500);
+            // Ensure keyframes are injected only once or are safely handled
+            if (!document.getElementById('fadeAndScaleKeyframes')) {
+                const styleSheet = document.createElement("style");
+                styleSheet.id = 'fadeAndScaleKeyframes';
+                styleSheet.innerHTML = keyframes;
+                document.head.appendChild(styleSheet);
+            }
+
+            setTimeout(() => { levelUpDiv.remove(); }, 2000);
         }
 
         function repeatTargetSound() { playLetterSound(); }
@@ -1071,6 +1135,10 @@
                     gameState.score = 0;
                     gameState.lives = 3;
                     gameState.currentLevel = 1;
+                    // Apply mechanics for the first level
+                    const firstLevelMechanics = getMechanicsForLevel(1);
+                    gameState.gameSpeed = firstLevelMechanics.gameSpeed;
+
                     initializeLetterPool();
                     setNewTarget(false);
                     updateUI();
@@ -1217,6 +1285,8 @@
             gameState.score = 0;
             gameState.lives = 3;
             gameState.currentLevel = 1;
+            const firstLevelMechanics = getMechanicsForLevel(1);
+            gameState.gameSpeed = firstLevelMechanics.gameSpeed;
             updateUI();
         }
 
