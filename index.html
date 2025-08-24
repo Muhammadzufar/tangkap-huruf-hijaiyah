@@ -1028,6 +1028,20 @@
             levelProgressBar.style.width = `${Math.max(0, Math.min(100, progress))}%`;
         }
 
+        function applyLevelStyles() {
+            const mechanics = getMechanicsForLevel(gameState.currentLevel);
+            if (mechanics.background) {
+                body.style.background = mechanics.background;
+                body.style.animation = 'none'; // Disable animation for static backgrounds
+            }
+        }
+
+        function resetBackground() {
+            body.style.background = 'linear-gradient(135deg, #e0f7fa, #b2ebf2, #80deea, #4dd0e1)';
+            body.style.backgroundSize = '300% 300%';
+            body.style.animation = 'animated-gradient 15s ease-in-out infinite';
+        }
+
         function checkLevelUp() {
             if (gameState.currentLevel >= MAX_LEVEL) return; // Already at max level
 
@@ -1039,6 +1053,7 @@
                 gameState.gameSpeed = newMechanics.gameSpeed;
 
                 playLevelUpSound();
+                applyLevelStyles(); // Apply new background
 
                 if (gameState.currentLevel === MAX_LEVEL) {
                     congratulationsScreen();
@@ -1138,6 +1153,7 @@
                     // Apply mechanics for the first level
                     const firstLevelMechanics = getMechanicsForLevel(1);
                     gameState.gameSpeed = firstLevelMechanics.gameSpeed;
+                    applyLevelStyles(); // Apply background for level 1
 
                     initializeLetterPool();
                     setNewTarget(false);
@@ -1253,6 +1269,7 @@
             gameState.score = 0;
             gameState.lives = 3;
             gameState.currentLevel = 1;
+            resetBackground();
             updateUI();
         }
 
@@ -1287,6 +1304,7 @@
             gameState.currentLevel = 1;
             const firstLevelMechanics = getMechanicsForLevel(1);
             gameState.gameSpeed = firstLevelMechanics.gameSpeed;
+            resetBackground();
             updateUI();
         }
 

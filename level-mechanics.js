@@ -1,6 +1,6 @@
 
 const levelMechanics = [
-    // Level 1-3: Classic Circles, steady speed increase
+    // Level 1-3: Intro / Sky Theme
     {
         level: 1,
         nextLevelScore: 50,
@@ -8,7 +8,8 @@ const levelMechanics = [
         bubbleClass: 'bubble-circle',
         specialEffect: null,
         spawnInterval: 2000,
-        description: "Mulai!"
+        description: "Awan: Mulai!",
+        background: 'linear-gradient(to top, #a1c4fd 0%, #c2e9fb 100%)'
     },
     {
         level: 2,
@@ -17,7 +18,8 @@ const levelMechanics = [
         bubbleClass: 'bubble-circle',
         specialEffect: null,
         spawnInterval: 1900,
-        description: "Sedikit lebih cepat!"
+        description: "Bukit: Sedikit lebih cepat!",
+        background: 'linear-gradient(to right, #43e97b 0%, #38f9d7 100%)'
     },
     {
         level: 3,
@@ -26,9 +28,10 @@ const levelMechanics = [
         bubbleClass: 'bubble-circle',
         specialEffect: null,
         spawnInterval: 1800,
-        description: "Makin cepat!"
+        description: "Sungai: Makin cepat!",
+        background: 'linear-gradient(to top, #48c6ef 0%, #6f86d6 100%)'
     },
-    // Level 4-6: Squares with Wind effect
+    // Level 4-6: Wind / Forest & Mountain
     {
         level: 4,
         nextLevelScore: 250,
@@ -36,7 +39,8 @@ const levelMechanics = [
         bubbleClass: 'bubble-square',
         specialEffect: 'wind',
         spawnInterval: 2000,
-        description: "Gelembung Kotak & Angin!"
+        description: "Hutan: Gelembung Kotak & Angin!",
+        background: 'linear-gradient(to top, #22422F, #3C6E47, #559B5F, #82C38E)'
     },
     {
         level: 5,
@@ -45,7 +49,8 @@ const levelMechanics = [
         bubbleClass: 'bubble-square',
         specialEffect: 'wind',
         spawnInterval: 1800,
-        description: "Angin lebih kencang!"
+        description: "Gunung: Angin lebih kencang!",
+        background: 'linear-gradient(to right, #d7d2cc 0%, #304352 100%)'
     },
     {
         level: 6,
@@ -54,9 +59,10 @@ const levelMechanics = [
         bubbleClass: 'bubble-square',
         specialEffect: 'wind',
         spawnInterval: 1700,
-        description: "Badai!"
+        description: "Gunung: Badai!",
+        background: 'linear-gradient(to top, #505285 0%, #585e92 12%, #65689f 25%, #74749a 37%, #8a7e8a 50%, #9b8a7a 62%, #b49a6a 75%, #c9b65a 87%, #d9d24a 100%)'
     },
-    // Level 7-10: Stars with Zigzag movement
+    // Level 7-10: Zigzag / Space Theme
     {
         level: 7,
         nextLevelScore: 600,
@@ -64,7 +70,8 @@ const levelMechanics = [
         bubbleClass: 'bubble-star',
         specialEffect: 'zigzag',
         spawnInterval: 1900,
-        description: "Gelembung Bintang!"
+        description: "Luar Angkasa: Gelembung Bintang!",
+        background: 'linear-gradient(to top, #30cfd0 0%, #330867 100%)'
     },
     {
         level: 8,
@@ -73,7 +80,8 @@ const levelMechanics = [
         bubbleClass: 'bubble-star',
         specialEffect: 'zigzag',
         spawnInterval: 1800,
-        description: "Bintang Jatuh!"
+        description: "Luar Angkasa: Bintang Jatuh!",
+        background: 'linear-gradient(to top, #09203f 0%, #537895 100%)'
     },
     {
         level: 9,
@@ -82,7 +90,8 @@ const levelMechanics = [
         bubbleClass: 'bubble-star',
         specialEffect: 'zigzag',
         spawnInterval: 1700,
-        description: "Hujan Meteor!"
+        description: "Luar Angkasa: Hujan Meteor!",
+        background: 'linear-gradient(to top, #243949 0%, #517fa4 100%)'
     },
     {
         level: 10,
@@ -91,9 +100,10 @@ const levelMechanics = [
         bubbleClass: 'bubble-star',
         specialEffect: 'zigzag',
         spawnInterval: 1600,
-        description: "Supernova!"
+        description: "Luar Angkasa: Supernova!",
+        background: 'linear-gradient(to right, #243949 0%, #517fa4 100%)'
     },
-    // Level 11-15: Mixed shapes and effects
+    // Level 11-15: Random / Sea Theme
     {
         level: 11,
         nextLevelScore: 1300,
@@ -101,7 +111,8 @@ const levelMechanics = [
         bubbleClass: 'bubble-random',
         specialEffect: 'random-move',
         spawnInterval: 1800,
-        description: "Mode Campuran!"
+        description: "Laut: Mode Campuran!",
+        background: 'linear-gradient(to top, #00c6fb 0%, #005bea 100%)'
     },
     {
         level: 12,
@@ -110,7 +121,8 @@ const levelMechanics = [
         bubbleClass: 'bubble-random',
         specialEffect: 'random-move',
         spawnInterval: 1700,
-        description: "Makin Kacau!"
+        description: "Laut Dalam: Makin Kacau!",
+        background: 'linear-gradient(to top, #1e3c72 0%, #2a5298 100%)'
     },
     {
         level: 13,
@@ -119,7 +131,8 @@ const levelMechanics = [
         bubbleClass: 'bubble-random',
         specialEffect: 'random-move',
         spawnInterval: 1600,
-        description: "Tidak Terduga!"
+        description: "Pantai: Tidak Terduga!",
+        background: 'linear-gradient(to right, #f7971e, #ffd200)'
     },
     {
         level: 14,
@@ -128,7 +141,8 @@ const levelMechanics = [
         bubbleClass: 'bubble-random',
         specialEffect: 'random-move',
         spawnInterval: 1500,
-        description: "Luar Biasa!"
+        description: "Senja di Laut: Luar Biasa!",
+        background: 'linear-gradient(to right, #ff7e5f, #feb47b)'
     },
     {
         level: 15,
@@ -137,7 +151,8 @@ const levelMechanics = [
         bubbleClass: 'bubble-random',
         specialEffect: 'random-move',
         spawnInterval: 1400,
-        description: "Master!"
+        description: "Master Samudra!",
+        background: 'linear-gradient(to right, #6a11cb 0%, #2575fc 100%)'
     }
     // Can be extended up to MAX_LEVEL
 ];
